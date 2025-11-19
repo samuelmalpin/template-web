@@ -652,21 +652,45 @@
             <div class="grid md:grid-cols-2 gap-12">
                 <!-- Contact Form -->
                 <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-xl">
-                    <form x-data="{ submitted: false }" @submit.prevent="submitted = true">
+                    <form x-data="{ submitted: false, error: false, loading: false }" 
+                          @submit.prevent="
+                            loading = true;
+                            fetch('contact.php', {
+                                method: 'POST',
+                                body: new FormData($event.target)
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                loading = false;
+                                if (data.success) {
+                                    submitted = true;
+                                    error = false;
+                                    $event.target.reset();
+                                } else {
+                                    error = true;
+                                    submitted = false;
+                                }
+                            })
+                            .catch(() => {
+                                loading = false;
+                                error = true;
+                                submitted = false;
+                            });
+                          ">
                         <div class="mb-6">
                             <label class="block text-gray-700 font-semibold mb-2">Votre nom *</label>
-                            <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
+                            <input type="text" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
                         </div>
                         
                         <div class="mb-6">
                             <label class="block text-gray-700 font-semibold mb-2">Email *</label>
-                            <input type="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
+                            <input type="email" name="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
                         </div>
                         
                         <div class="mb-6">
                             <label class="block text-gray-700 font-semibold mb-2">Type de projet *</label>
-                            <select required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
-                                <option>Choisir...</option>
+                            <select name="type" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white">
+                                <option value="">Choisir...</option>
                                 <option>Site Vitrine</option>
                                 <option>Site E-Commerce</option>
                                 <option>Site Sur-Mesure</option>
@@ -677,15 +701,20 @@
                         
                         <div class="mb-6">
                             <label class="block text-gray-700 font-semibold mb-2">Votre message *</label>
-                            <textarea required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white"></textarea>
+                            <textarea name="message" required rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none bg-white"></textarea>
                         </div>
                         
-                        <button type="submit" class="w-full gradient-bg text-white py-4 rounded-lg font-bold hover:opacity-90 transition shadow-lg">
-                            Envoyer le Message
+                        <button type="submit" :disabled="loading" class="w-full gradient-bg text-white py-4 rounded-lg font-bold hover:opacity-90 transition shadow-lg disabled:opacity-50">
+                            <span x-show="!loading"><i class="fas fa-paper-plane mr-2"></i>Envoyer le Message</span>
+                            <span x-show="loading"><i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours...</span>
                         </button>
                         
                         <div x-show="submitted" x-transition class="mt-4 bg-green-100 text-green-700 p-4 rounded-lg">
                             ✅ Merci ! Je vous recontacte dans les 24h.
+                        </div>
+                        
+                        <div x-show="error" x-transition class="mt-4 bg-red-100 text-red-700 p-4 rounded-lg">
+                            ❌ Erreur lors de l'envoi. Veuillez réessayer ou me contacter directement.
                         </div>
                     </form>
                 </div>
